@@ -18,7 +18,7 @@ class DashboardController extends Controller
      */
     public function stats(): JsonResponse
     {
-        $user = Auth::user();
+        $user = Auth::user()->load('tenant');
         $tenantId = $user->tenant_id;
 
         // Get counts
@@ -73,6 +73,31 @@ class DashboardController extends Controller
             ->get();
 
         return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'profile_picture_url' => $user->getFirstMediaUrl('profile_picture'),
+                'profile_picture_thumb_url' => $user->getFirstMediaUrl('profile_picture', 'thumb'),
+                'email_verified_at' => $user->email_verified_at,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+                'tenant' => [
+                    'id' => $user->tenant->id,
+                    'business_name' => $user->tenant->business_name,
+                    'logo_url' => $user->tenant->getFirstMediaUrl('logo'),
+                    'logo_thumb_url' => $user->tenant->getFirstMediaUrl('logo', 'thumb'),
+                    'phone' => $user->tenant->phone,
+                    'email' => $user->tenant->email,
+                    'address' => $user->tenant->address,
+                    'city' => $user->tenant->city,
+                    'country' => $user->tenant->country,
+                    'currency' => $user->tenant->currency,
+                    'created_at' => $user->tenant->created_at,
+                    'updated_at' => $user->tenant->updated_at,
+                ],
+            ],
             'counts' => [
                 'products' => $totalProducts,
                 'customers' => $totalCustomers,

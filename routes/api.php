@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\QuotationController;
+use App\Http\Controllers\Api\TenantController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -16,7 +18,17 @@ Route::post('/login', [AuthController::class, 'login']);
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', [AuthController::class, 'user']);
+
+    // User Profile
+    Route::get('/user', [UserController::class, 'show']);
+    Route::put('/profile', [UserController::class, 'updateProfile']);
+    Route::post('/profile/picture', [UserController::class, 'uploadProfilePicture']);
+    Route::delete('/profile/picture', [UserController::class, 'deleteProfilePicture']);
+
+    // Tenant Management
+    Route::put('/tenant', [TenantController::class, 'update']);
+    Route::post('/tenant/logo', [TenantController::class, 'uploadLogo']);
+    Route::delete('/tenant/logo', [TenantController::class, 'deleteLogo']);
 
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);

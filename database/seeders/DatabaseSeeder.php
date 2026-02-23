@@ -28,10 +28,13 @@ class DatabaseSeeder extends Seeder
     {
         // Create tenant
         $tenant = Tenant::create([
-            'name' => 'DemoStore',
+            'business_name' => 'DemoStore',
             'email' => 'info@dayzsolutions.com',
             'phone' => '+94 77 123 4567',
-            'address' => 'Colombo, Sri Lanka',
+            'address' => '123 Main Street, Business Park',
+            'city' => 'Colombo',
+            'country' => 'Sri Lanka',
+            'currency' => 'LKR',
         ]);
 
         // Create user
@@ -66,8 +69,8 @@ class DatabaseSeeder extends Seeder
             $products[] = Product::create([
                 'tenant_id' => $tenant->id,
                 'name' => $name,
-                'sku' => 'SKU-' . str_pad($index + 1, 4, '0', STR_PAD_LEFT),
-                'barcode' => '123456789' . str_pad($index, 4, '0', STR_PAD_LEFT),
+                'sku' => 'SKU-'.str_pad($index + 1, 4, '0', STR_PAD_LEFT),
+                'barcode' => '123456789'.str_pad($index, 4, '0', STR_PAD_LEFT),
                 'description' => fake()->sentence(),
                 'cost_price' => fake()->numberBetween(500, 100000),
                 'selling_price' => fake()->numberBetween(1000, 150000),
@@ -83,10 +86,10 @@ class DatabaseSeeder extends Seeder
             $isCompany = $i % 3 === 0;
             $customers[] = Customer::create([
                 'tenant_id' => $tenant->id,
-                'name' => $isCompany ? $companies[array_rand($companies)] . " ($i)" : fake()->name(),
+                'name' => $isCompany ? $companies[array_rand($companies)]." ($i)" : fake()->name(),
                 'email' => fake()->unique()->safeEmail(),
-                'phone' => '+94 ' . fake()->numerify('## ### ####'),
-                'address' => fake()->city() . ', Sri Lanka',
+                'phone' => '+94 '.fake()->numerify('## ### ####'),
+                'address' => fake()->city().', Sri Lanka',
             ]);
         }
 
@@ -126,7 +129,7 @@ class DatabaseSeeder extends Seeder
                 $order = Order::create([
                     'tenant_id' => $tenant->id,
                     'customer_id' => $customer->id,
-                    'order_number' => 'ORD-' . now()->format('Ymd') . '-' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                    'order_number' => 'ORD-'.now()->format('Ymd').'-'.str_pad($i, 4, '0', STR_PAD_LEFT),
                     'order_date' => now()->subDays(fake()->numberBetween(0, 30)),
                     'status' => $status,
                     'subtotal' => $subtotal,
@@ -177,7 +180,7 @@ class DatabaseSeeder extends Seeder
                     'tenant_id' => $tenant->id,
                     'customer_id' => $customer->id,
                     'order_id' => null,
-                    'invoice_number' => 'INV-' . now()->format('Ymd') . '-' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                    'invoice_number' => 'INV-'.now()->format('Ymd').'-'.str_pad($i, 4, '0', STR_PAD_LEFT),
                     'invoice_date' => now()->subDays(fake()->numberBetween(0, 25)),
                     'due_date' => now()->addDays(fake()->numberBetween(15, 45)),
                     'status' => $status,
@@ -228,7 +231,7 @@ class DatabaseSeeder extends Seeder
                 $quotation = Quotation::create([
                     'tenant_id' => $tenant->id,
                     'customer_id' => $customer->id,
-                    'quotation_number' => 'QUO-' . now()->format('Ymd') . '-' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                    'quotation_number' => 'QUO-'.now()->format('Ymd').'-'.str_pad($i, 4, '0', STR_PAD_LEFT),
                     'quotation_date' => now()->subDays(fake()->numberBetween(0, 20)),
                     'valid_until' => now()->addDays(fake()->numberBetween(20, 60)),
                     'status' => $status,
@@ -246,12 +249,12 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->command->info('✅ Seeded successfully:');
-        $this->command->info("   - 1 Tenant");
-        $this->command->info("   - 1 User");
-        $this->command->info("   - 15 Products");
-        $this->command->info("   - 15 Customers");
-        $this->command->info("   - 15 Orders (with items)");
-        $this->command->info("   - 12 Invoices (with items)");
-        $this->command->info("   - 10 Quotations (with items)");
+        $this->command->info('   - 1 Tenant');
+        $this->command->info('   - 1 User');
+        $this->command->info('   - 15 Products');
+        $this->command->info('   - 15 Customers');
+        $this->command->info('   - 15 Orders (with items)');
+        $this->command->info('   - 12 Invoices (with items)');
+        $this->command->info('   - 10 Quotations (with items)');
     }
 }

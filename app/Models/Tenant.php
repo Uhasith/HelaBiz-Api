@@ -5,17 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Tenant extends Model
+class Tenant extends Model implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\TenantFactory> */
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
-        'name',
-        'email',
+        'business_name',
+        'logo',
         'phone',
+        'email',
         'address',
+        'city',
+        'country',
+        'currency',
     ];
 
     public function users(): HasMany
@@ -46,5 +52,20 @@ class Tenant extends Model
     public function quotations(): HasMany
     {
         return $this->hasMany(Quotation::class);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('logo')
+            ->singleFile()
+            ->registerMediaConversions(function () {
+                $this->addMediaConversion('thumb')
+                    ->width(200)
+                    ->height(200);
+
+                $this->addMediaConversion('medium')
+                    ->width(400)
+                    ->height(400);
+            });
     }
 }
