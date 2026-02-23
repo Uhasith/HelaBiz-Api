@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('customers', CustomerController::class);
 
     // Orders
+    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus']);
     Route::apiResource('orders', OrderController::class);
 
     // Invoices
