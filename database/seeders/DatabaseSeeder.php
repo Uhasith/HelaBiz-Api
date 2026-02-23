@@ -110,6 +110,8 @@ class DatabaseSeeder extends Seeder
 
                 $items[] = [
                     'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'product_sku' => $product->sku,
                     'quantity' => $quantity,
                     'unit_price' => $unitPrice,
                     'total' => $total,
