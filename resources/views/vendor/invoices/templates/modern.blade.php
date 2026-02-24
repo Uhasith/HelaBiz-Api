@@ -352,6 +352,9 @@
                     @endif
                     <div class="invoice-meta">
                         <p><strong>{{ __('invoices::invoice.serial') }}:</strong> {{ $invoice->getSerialNumber() }}</p>
+                        @if($invoice->getCustomData() && isset($invoice->getCustomData()['order_number']))
+                            <p><strong>Order No:</strong> {{ $invoice->getCustomData()['order_number'] }}</p>
+                        @endif
                         <p><strong>{{ __('invoices::invoice.date') }}:</strong> {{ $invoice->getDate() }}</p>
                         @if($invoice->getPayUntilDate())
                             <p><strong>Due Date:</strong> {{ $invoice->getPayUntilDate() }}</p>

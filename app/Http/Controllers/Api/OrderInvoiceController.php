@@ -269,9 +269,11 @@ class OrderInvoiceController extends Controller
             ->payUntilDays(config('invoices.date.pay_until_days', 7))
             ->currencyCode($tenant->currency ?? 'USD')
             ->currencySymbol($this->getCurrencySymbol($tenant->currency ?? 'USD'))
+            ->currencyFormat('{SYMBOL} {VALUE}')
             ->addItems($items)
             ->taxableAmount($order->subtotal)
             ->totalAmount($order->total)
+            ->setCustomData(['order_number' => $order->order_number])
             ->filename("invoice_{$invoiceNumber}");
 
         // Add discount if present
@@ -353,7 +355,7 @@ class OrderInvoiceController extends Controller
             'CAD' => 'C$',
             'CHF' => 'CHF',
             'CNY' => '¥',
-            'LKR' => 'Rs',
+            'LKR' => 'Rs.',
             default => $currency,
         };
     }
