@@ -282,19 +282,33 @@ class OrderInvoiceController extends Controller
         //     $invoice->totalTaxes($order->tax);
         // }
 
-        // Add notes if present
+        // Combine notes with warranty information
+        $notesArray = [];
+        
+        if ($order->warranty_period && $order->warranty_unit) {
+            $notesArray[] = "WARRANTY: {$order->warranty_period} {$order->warranty_unit}";
+        }
+        
         if ($order->notes) {
-            $invoice->notes($order->notes);
+            $notesArray[] = $order->notes;
+        }
+        
+        if (!empty($notesArray)) {
+            $invoice->notes(implode("<br><br>", $notesArray));
         }
 
-        // Add logo if available
-        if ($tenant->logo) {
-            $logoPath = storage_path('app/public/'.$tenant->logo);
-            if (file_exists($logoPath)) {
-                $invoice->logo($logoPath);
+        // Add logo if available (check Spatie Media first)
+        if ($tenant->hasMedia('logo')) {
+            $media = $tenant->getFirstMedia('logo');
+            if ($media) {
+                $logoPath = $media->getPath();
+                if (file_exists($logoPath)) {
+                    $invoice->logo($logoPath);
+                }
             }
-        } elseif ($tenant->hasMedia('logo')) {
-            $logoPath = $tenant->getFirstMedia('logo')->getPath();
+        } elseif ($tenant->logo) {
+            // Fallback to traditional logo column
+            $logoPath = storage_path('app/public/'.$tenant->logo);
             if (file_exists($logoPath)) {
                 $invoice->logo($logoPath);
             }

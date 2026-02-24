@@ -60,7 +60,7 @@ class CustomerController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        return response()->json($customer);
+        return response()->json($customer->load('orders'));
     }
 
     /**

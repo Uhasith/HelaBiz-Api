@@ -30,7 +30,7 @@ class ProductController extends Controller
         }
 
         $products = $query->latest()
-            ->paginate($request->input('per_page', 5));
+            ->paginate($request->input('per_page', 15));
 
         return response()->json($products);
     }

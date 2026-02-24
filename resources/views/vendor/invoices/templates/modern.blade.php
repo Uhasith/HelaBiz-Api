@@ -518,7 +518,13 @@
         @if($invoice->notes)
             <div class="notes-section">
                 <div class="notes-title">{{ __('invoices::invoice.notes') }}</div>
-                <div class="notes-content">{!! nl2br(e($invoice->notes)) !!}</div>
+                <div class="notes-content">
+                    {!! str_replace(
+                        'WARRANTY:', 
+                        '<strong style="color: #dc2626;">WARRANTY:</strong>', 
+                        nl2br(e($invoice->notes))
+                    ) !!}
+                </div>
             </div>
         @endif
 
