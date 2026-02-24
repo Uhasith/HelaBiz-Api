@@ -23,11 +23,11 @@ class UploadTenantLogoRequest extends FormRequest
         $logo = $this->input('logo');
         $dataUriPattern = '/^data:image\/(\w+);base64,/';
         $hasValidFormat = is_string($logo) && preg_match($dataUriPattern, $logo);
-        
+
         Log::info('UploadTenantLogoRequest received', [
             'user_id' => $this->user()?->id,
             'tenant_id' => $this->user()?->tenant_id,
-            'has_logo' => !empty($logo),
+            'has_logo' => ! empty($logo),
             'logo_length' => is_string($logo) ? strlen($logo) : 0,
             'is_base64_format' => $hasValidFormat,
             'all_keys' => array_keys($this->all()),

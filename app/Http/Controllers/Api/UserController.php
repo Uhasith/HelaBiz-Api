@@ -85,7 +85,7 @@ class UserController extends Controller
             $extension = $matches[1];
             $base64Data = substr($imageData, strpos($imageData, ',') + 1);
             $decodedImage = base64_decode($base64Data);
-            
+
             Log::info('UserController@uploadProfilePicture called', [
                 'user_id' => $user->id,
                 'extension' => $extension,

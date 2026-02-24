@@ -51,7 +51,7 @@ class TenantController extends Controller
             $extension = $matches[1];
             $base64Data = substr($imageData, strpos($imageData, ',') + 1);
             $decodedImage = base64_decode($base64Data);
-            
+
             Log::info('TenantController@uploadLogo called', [
                 'tenant_id' => $tenant->id,
                 'user_id' => $request->user()->id,

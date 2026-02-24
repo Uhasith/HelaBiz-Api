@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Invoice extends Model
+class Invoice extends Model implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\InvoiceFactory> */
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
         'tenant_id',
@@ -26,6 +28,8 @@ class Invoice extends Model
         'total',
         'notes',
     ];
+
+    protected $appends = ['pdf_url'];
 
     protected function casts(): array
     {
@@ -57,5 +61,16 @@ class Invoice extends Model
     public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);
+    }
+
+    public function getPdfUrlAttribute(): ?string
+    {
+        return $this->getFirstMediaUrl('invoice_pdf') ?: null;
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('invoice_pdf')
+            ->singleFile();
     }
 }

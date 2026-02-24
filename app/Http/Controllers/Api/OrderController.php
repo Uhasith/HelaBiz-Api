@@ -20,7 +20,7 @@ class OrderController extends Controller
     {
         $query = Order::query()
             ->where('tenant_id', $request->user()->tenant_id)
-            ->with(['customer', 'items.product']);
+            ->with(['customer', 'items.product', 'invoice']);
 
         // Search filter
         if ($search = $request->input('search')) {
@@ -144,7 +144,7 @@ class OrderController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        return response()->json($order->load(['customer', 'items.product']));
+        return response()->json($order->load(['customer', 'items.product', 'invoice']));
     }
 
     /**

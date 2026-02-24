@@ -23,10 +23,10 @@ class UploadProfilePictureRequest extends FormRequest
         $picture = $this->input('picture');
         $dataUriPattern = '/^data:image\/(\w+);base64,/';
         $hasValidFormat = is_string($picture) && preg_match($dataUriPattern, $picture);
-        
+
         Log::info('UploadProfilePictureRequest received', [
             'user_id' => $this->user()?->id,
-            'has_picture' => !empty($picture),
+            'has_picture' => ! empty($picture),
             'picture_length' => is_string($picture) ? strlen($picture) : 0,
             'is_base64_format' => $hasValidFormat,
             'all_keys' => array_keys($this->all()),

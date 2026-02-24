@@ -3,13 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Customer;
-use App\Models\Invoice;
-use App\Models\InvoiceItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
-use App\Models\Quotation;
-use App\Models\QuotationItem;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -145,116 +141,12 @@ class DatabaseSeeder extends Seeder
             });
         }
 
-        // Create 12 invoices with items
-        $invoiceStatuses = ['draft', 'sent', 'paid', 'overdue', 'cancelled'];
-        for ($i = 1; $i <= 12; $i++) {
-            $customer = $customers[array_rand($customers)];
-            $status = $invoiceStatuses[array_rand($invoiceStatuses)];
-
-            $subtotal = 0;
-            $items = [];
-
-            // Each invoice has 1-4 items
-            $itemCount = fake()->numberBetween(1, 4);
-            for ($j = 0; $j < $itemCount; $j++) {
-                $product = $products[array_rand($products)];
-                $quantity = fake()->numberBetween(1, 5);
-                $unitPrice = $product->selling_price;
-                $total = $quantity * $unitPrice;
-                $subtotal += $total;
-
-                $items[] = [
-                    'product_id' => $product->id,
-                    'quantity' => $quantity,
-                    'unit_price' => $unitPrice,
-                    'total' => $total,
-                ];
-            }
-
-            $taxAmount = $subtotal * 0.1;
-            $discountAmount = fake()->boolean(20) ? fake()->numberBetween(100, 3000) : 0;
-            $totalAmount = $subtotal + $taxAmount - $discountAmount;
-
-            DB::transaction(function () use ($tenant, $customer, $status, $subtotal, $taxAmount, $discountAmount, $totalAmount, $items, $i) {
-                $invoice = Invoice::create([
-                    'tenant_id' => $tenant->id,
-                    'customer_id' => $customer->id,
-                    'order_id' => null,
-                    'invoice_number' => 'INV-'.now()->format('Ymd').'-'.str_pad($i, 4, '0', STR_PAD_LEFT),
-                    'invoice_date' => now()->subDays(fake()->numberBetween(0, 25)),
-                    'due_date' => now()->addDays(fake()->numberBetween(15, 45)),
-                    'status' => $status,
-                    'subtotal' => $subtotal,
-                    'tax' => $taxAmount,
-                    'discount' => $discountAmount,
-                    'total' => $totalAmount,
-                    'notes' => fake()->boolean(30) ? fake()->sentence() : null,
-                ]);
-
-                foreach ($items as $item) {
-                    InvoiceItem::create(array_merge(['invoice_id' => $invoice->id], $item));
-                }
-            });
-        }
-
-        // Create 10 quotations with items
-        $quotationStatuses = ['draft', 'sent', 'accepted', 'rejected', 'expired'];
-        for ($i = 1; $i <= 10; $i++) {
-            $customer = $customers[array_rand($customers)];
-            $status = $quotationStatuses[array_rand($quotationStatuses)];
-
-            $subtotal = 0;
-            $items = [];
-
-            // Each quotation has 1-6 items
-            $itemCount = fake()->numberBetween(1, 6);
-            for ($j = 0; $j < $itemCount; $j++) {
-                $product = $products[array_rand($products)];
-                $quantity = fake()->numberBetween(1, 10);
-                $unitPrice = $product->selling_price;
-                $total = $quantity * $unitPrice;
-                $subtotal += $total;
-
-                $items[] = [
-                    'product_id' => $product->id,
-                    'quantity' => $quantity,
-                    'unit_price' => $unitPrice,
-                    'total' => $total,
-                ];
-            }
-
-            $taxAmount = $subtotal * 0.1;
-            $discountAmount = fake()->boolean(50) ? fake()->numberBetween(500, 10000) : 0;
-            $totalAmount = $subtotal + $taxAmount - $discountAmount;
-
-            DB::transaction(function () use ($tenant, $customer, $status, $subtotal, $taxAmount, $discountAmount, $totalAmount, $items, $i) {
-                $quotation = Quotation::create([
-                    'tenant_id' => $tenant->id,
-                    'customer_id' => $customer->id,
-                    'quotation_number' => 'QUO-'.now()->format('Ymd').'-'.str_pad($i, 4, '0', STR_PAD_LEFT),
-                    'quotation_date' => now()->subDays(fake()->numberBetween(0, 20)),
-                    'valid_until' => now()->addDays(fake()->numberBetween(20, 60)),
-                    'status' => $status,
-                    'subtotal' => $subtotal,
-                    'tax' => $taxAmount,
-                    'discount' => $discountAmount,
-                    'total' => $totalAmount,
-                    'notes' => fake()->boolean(40) ? fake()->sentence() : null,
-                ]);
-
-                foreach ($items as $item) {
-                    QuotationItem::create(array_merge(['quotation_id' => $quotation->id], $item));
-                }
-            });
-        }
-
+    
         $this->command->info('✅ Seeded successfully:');
         $this->command->info('   - 1 Tenant');
         $this->command->info('   - 1 User');
         $this->command->info('   - 15 Products');
         $this->command->info('   - 15 Customers');
         $this->command->info('   - 15 Orders (with items)');
-        $this->command->info('   - 12 Invoices (with items)');
-        $this->command->info('   - 10 Quotations (with items)');
     }
 }
