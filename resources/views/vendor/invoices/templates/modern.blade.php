@@ -476,7 +476,7 @@
             <div class="totals-right">
                 <table class="totals-table">
                     <tr>
-                        <td>{{ __('invoices::invoice.subtotal') }}</td>
+                        <td>{{ __('invoices::invoice.sub_total') }}</td>
                         <td>{{ $invoice->formatCurrency($invoice->taxable_amount) }}</td>
                     </tr>
                     @if($invoice->hasItemOrInvoiceDiscount())
