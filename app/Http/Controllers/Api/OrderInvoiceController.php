@@ -270,6 +270,8 @@ class OrderInvoiceController extends Controller
             ->currencyCode($tenant->currency ?? 'USD')
             ->currencySymbol($this->getCurrencySymbol($tenant->currency ?? 'USD'))
             ->addItems($items)
+            ->taxableAmount($order->subtotal)
+            ->totalAmount($order->total)
             ->filename("invoice_{$invoiceNumber}");
 
         // Add discount if present
@@ -284,17 +286,17 @@ class OrderInvoiceController extends Controller
 
         // Combine notes with warranty information
         $notesArray = [];
-        
+
         if ($order->warranty_period && $order->warranty_unit) {
             $notesArray[] = "WARRANTY: {$order->warranty_period} {$order->warranty_unit}";
         }
-        
+
         if ($order->notes) {
             $notesArray[] = $order->notes;
         }
-        
-        if (!empty($notesArray)) {
-            $invoice->notes(implode("<br><br>", $notesArray));
+
+        if (! empty($notesArray)) {
+            $invoice->notes(implode('<br><br>', $notesArray));
         }
 
         // Add logo if available (check Spatie Media first)

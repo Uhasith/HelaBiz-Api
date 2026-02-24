@@ -475,6 +475,10 @@
             </div>
             <div class="totals-right">
                 <table class="totals-table">
+                    <tr>
+                        <td>{{ __('invoices::invoice.subtotal') }}</td>
+                        <td>{{ $invoice->formatCurrency($invoice->taxable_amount) }}</td>
+                    </tr>
                     @if($invoice->hasItemOrInvoiceDiscount())
                         <tr>
                             <td>{{ __('invoices::invoice.total_discount') }}</td>
