@@ -272,7 +272,6 @@ class OrderInvoiceController extends Controller
             ->currencyFormat('{SYMBOL} {VALUE}')
             ->addItems($items)
             ->taxableAmount($order->subtotal)
-            ->totalAmount($order->total)
             ->setCustomData(['order_number' => $order->order_number])
             ->filename("invoice_{$invoiceNumber}");
 
@@ -280,6 +279,9 @@ class OrderInvoiceController extends Controller
         if ($order->discount > 0) {
             $invoice->totalDiscount($order->discount);
         }
+
+        // Set total amount after discount
+        $invoice->totalAmount($order->total);
 
         // Add tax if present
         // if ($order->tax > 0) {
