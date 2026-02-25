@@ -490,12 +490,10 @@
                             <td>{{ $invoice->formatCurrency($invoice->total_discount) }}</td>
                         </tr>
                     @endif
-                    @if($invoice->total_amount)
-                        <tr class="total-row">
-                            <td>{{ __('invoices::invoice.total_amount') }}</td>
-                            <td>{{ $invoice->formatCurrency($invoice->total_amount) }}</td>
-                        </tr>
-                    @endif
+                    <tr class="total-row">
+                        <td>{{ __('invoices::invoice.total_amount') }}</td>
+                        <td>{{ $invoice->formatCurrency($invoice->total_amount) }}</td>
+                    </tr>
                 </table>
             </div>
         </div>
