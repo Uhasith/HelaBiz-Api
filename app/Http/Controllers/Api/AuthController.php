@@ -19,12 +19,14 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'tenant_name' => 'required|string|max:255',
+            'currency' => 'nullable|string|size:3',
         ]);
 
         // Create tenant
         $tenant = Tenant::create([
-            'name' => $validated['tenant_name'],
+            'business_name' => $validated['tenant_name'],
             'email' => $validated['email'],
+            'currency' => $validated['currency'] ?? 'LKR',
         ]);
 
         // Create user

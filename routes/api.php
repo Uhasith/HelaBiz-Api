@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::get('/dashboard/revenue', [DashboardController::class, 'revenue']);
 
     // Products
     Route::apiResource('products', ProductController::class);

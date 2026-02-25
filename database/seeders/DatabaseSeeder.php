@@ -89,9 +89,9 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // Create 15 orders with items
+        // Create 50 orders with items
         $orderStatuses = ['pending', 'processing', 'completed', 'cancelled'];
-        for ($i = 1; $i <= 15; $i++) {
+        for ($i = 1; $i <= 50; $i++) {
             $customer = $customers[array_rand($customers)];
             $status = $orderStatuses[array_rand($orderStatuses)];
 
@@ -121,18 +121,23 @@ class DatabaseSeeder extends Seeder
             $discount = fake()->boolean(30) ? fake()->numberBetween(100, 5000) : 0;
             $total = $subtotal + $tax - $discount;
 
-            DB::transaction(function () use ($tenant, $customer, $status, $subtotal, $tax, $discount, $total, $items, $i) {
+            // Generate random date within past 12 months
+            $randomDate = now()->subDays(fake()->numberBetween(0, 365));
+
+            DB::transaction(function () use ($tenant, $customer, $status, $subtotal, $tax, $discount, $total, $items, $i, $randomDate) {
                 $order = Order::create([
                     'tenant_id' => $tenant->id,
                     'customer_id' => $customer->id,
-                    'order_number' => 'ORD-'.now()->format('Ymd').'-'.str_pad($i, 4, '0', STR_PAD_LEFT),
-                    'order_date' => now()->subDays(fake()->numberBetween(0, 30)),
+                    'order_number' => 'ORD-'.$randomDate->format('Ymd').'-'.str_pad($i, 4, '0', STR_PAD_LEFT),
+                    'order_date' => $randomDate,
                     'status' => $status,
                     'subtotal' => $subtotal,
                     'tax' => $tax,
                     'discount' => $discount,
                     'total' => $total,
                     'notes' => fake()->boolean(40) ? fake()->sentence() : null,
+                    'created_at' => $randomDate,
+                    'updated_at' => $randomDate,
                 ]);
 
                 foreach ($items as $item) {
@@ -141,12 +146,11 @@ class DatabaseSeeder extends Seeder
             });
         }
 
-    
         $this->command->info('✅ Seeded successfully:');
         $this->command->info('   - 1 Tenant');
         $this->command->info('   - 1 User');
         $this->command->info('   - 15 Products');
         $this->command->info('   - 15 Customers');
-        $this->command->info('   - 15 Orders (with items)');
+        $this->command->info('   - 50 Orders (with items spanning past 12 months)');
     }
 }

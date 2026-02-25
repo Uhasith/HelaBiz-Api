@@ -28,17 +28,6 @@ class DashboardController extends Controller
         $totalInvoices = Invoice::query()->where('tenant_id', $tenantId)->count();
         $totalQuotations = Quotation::query()->where('tenant_id', $tenantId)->count();
 
-        // Get revenue statistics
-        $totalRevenue = Order::query()
-            ->where('tenant_id', $tenantId)
-            ->where('status', 'completed')
-            ->sum('total');
-
-        $pendingOrdersValue = Order::query()
-            ->where('tenant_id', $tenantId)
-            ->where('status', 'pending')
-            ->sum('total');
-
         // Get low stock products
         $lowStockProducts = Product::query()
             ->where('tenant_id', $tenantId)
@@ -105,14 +94,76 @@ class DashboardController extends Controller
                 'invoices' => $totalInvoices,
                 'quotations' => $totalQuotations,
             ],
-            'revenue' => [
-                'total' => (float) $totalRevenue,
-                'pending_orders' => (float) $pendingOrdersValue,
-            ],
             'low_stock_products' => $lowStockProducts,
             'recent_orders' => $recentOrders,
             'recent_invoices' => $recentInvoices,
             'pending_quotations' => $pendingQuotations,
+        ]);
+    }
+
+    /**
+     * Get revenue statistics
+     */
+    public function revenue(): JsonResponse
+    {
+        $user = Auth::user();
+        $tenantId = $user->tenant_id;
+
+        // Get revenue statistics
+        $totalRevenue = Order::query()
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'completed')
+            ->sum('total');
+
+        $pendingOrdersValue = Order::query()
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'pending')
+            ->sum('total');
+
+        $todayRevenue = Order::query()
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'completed')
+            ->whereDate('created_at', today())
+            ->sum('total');
+
+        $thisWeekRevenue = Order::query()
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'completed')
+            ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->sum('total');
+
+        $thisMonthRevenue = Order::query()
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'completed')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('total');
+
+        $lastMonthRevenue = Order::query()
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'completed')
+            ->whereMonth('created_at', now()->subMonth()->month)
+            ->whereYear('created_at', now()->subMonth()->year)
+            ->sum('total');
+
+        // Calculate growth percentage (this month vs last month)
+        $growthPercentage = 0;
+        if ($lastMonthRevenue > 0) {
+            $growthPercentage = (($thisMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100;
+        } elseif ($thisMonthRevenue > 0) {
+            $growthPercentage = 100;
+        }
+
+        return response()->json([
+            'revenue' => [
+                'total' => (float) $totalRevenue,
+                'pending_orders' => (float) $pendingOrdersValue,
+                'today' => (float) $todayRevenue,
+                'this_week' => (float) $thisWeekRevenue,
+                'this_month' => (float) $thisMonthRevenue,
+                'last_month' => (float) $lastMonthRevenue,
+                'growth_percentage' => round($growthPercentage, 2),
+            ],
         ]);
     }
 }
