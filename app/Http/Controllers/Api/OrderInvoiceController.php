@@ -271,13 +271,17 @@ class OrderInvoiceController extends Controller
             ->currencySymbol($this->getCurrencySymbol($tenant->currency ?? 'USD'))
             ->currencyFormat('{SYMBOL} {VALUE}')
             ->addItems($items)
+            ->taxableAmount($order->subtotal)
             ->setCustomData(['order_number' => $order->order_number])
             ->filename("invoice_{$invoiceNumber}");
 
-        // Add discount if present - package will auto-calculate final total
+        // Add discount if present
         if ($order->discount > 0) {
             $invoice->totalDiscount($order->discount);
         }
+
+        // Set total amount (subtotal - discount + tax)
+        // $invoice->totalAmount($order->total);
 
         // Add tax if present
         // if ($order->tax > 0) {
