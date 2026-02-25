@@ -280,13 +280,8 @@ class OrderInvoiceController extends Controller
             $invoice->totalDiscount($order->discount);
         }
 
-        // Set total amount (subtotal - discount + tax)
-        // $invoice->totalAmount($order->total);
-
-        // Add tax if present
-        // if ($order->tax > 0) {
-        //     $invoice->totalTaxes($order->tax);
-        // }
+        // Set total amount (subtotal - discount)
+        $invoice->totalAmount($order->total);
 
         // Combine notes with warranty information
         $notesArray = [];

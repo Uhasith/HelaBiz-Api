@@ -478,45 +478,24 @@
             </div>
             <div class="totals-right">
                 <table class="totals-table">
-                    <tr>
-                        <td>{{ __('invoices::invoice.sub_total') }}</td>
-                        <td>{{ $invoice->formatCurrency($invoice->taxable_amount) }}</td>
-                    </tr>
+                    @if($invoice->taxable_amount)
+                        <tr>
+                            <td>{{ __('invoices::invoice.sub_total') }}</td>
+                            <td>{{ $invoice->formatCurrency($invoice->taxable_amount) }}</td>
+                        </tr>
+                    @endif
                     @if($invoice->hasItemOrInvoiceDiscount())
                         <tr>
                             <td>{{ __('invoices::invoice.total_discount') }}</td>
                             <td>{{ $invoice->formatCurrency($invoice->total_discount) }}</td>
                         </tr>
                     @endif
-                    {{-- Tax sections commented out as not currently in use --}}
-                    {{-- @if($invoice->taxable_amount)
-                        <tr>
-                            <td>{{ __('invoices::invoice.taxable_amount') }}</td>
-                            <td>{{ $invoice->formatCurrency($invoice->taxable_amount) }}</td>
+                    @if($invoice->total_amount)
+                        <tr class="total-row">
+                            <td>{{ __('invoices::invoice.total_amount') }}</td>
+                            <td>{{ $invoice->formatCurrency($invoice->total_amount) }}</td>
                         </tr>
                     @endif
-                    @if($invoice->tax_rate)
-                        <tr>
-                            <td>{{ __('invoices::invoice.tax_rate') }}</td>
-                            <td>{{ $invoice->tax_rate }}%</td>
-                        </tr>
-                    @endif
-                    @if($invoice->hasItemOrInvoiceTax())
-                        <tr>
-                            <td>{{ __('invoices::invoice.total_taxes') }}</td>
-                            <td>{{ $invoice->formatCurrency($invoice->total_taxes) }}</td>
-                        </tr>
-                    @endif --}}
-                    @if($invoice->shipping_amount)
-                        <tr>
-                            <td>{{ __('invoices::invoice.shipping') }}</td>
-                            <td>{{ $invoice->formatCurrency($invoice->shipping_amount) }}</td>
-                        </tr>
-                    @endif
-                    <tr class="total-row">
-                        <td>{{ __('invoices::invoice.total_amount') }}</td>
-                        <td>{{ $invoice->formatCurrency($invoice->total_amount) }}</td>
-                    </tr>
                 </table>
             </div>
         </div>
