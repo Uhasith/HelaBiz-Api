@@ -127,4 +127,47 @@ class ProductController extends Controller
 
         return response()->json(null, 204);
     }
+
+    /**
+     * Adjust product stock quantity.
+     */
+    public function adjustStock(Request $request, Product $product): JsonResponse
+    {
+        if ($product->tenant_id !== $request->user()->tenant_id) {
+            abort(403, 'Unauthorized');
+        }
+
+        $validated = $request->validate([
+            'adjustment' => 'required|integer|not_in:0',
+            'note' => 'nullable|string|max:500',
+        ]);
+
+        $newQuantity = $product->stock_quantity + $validated['adjustment'];
+
+        if ($newQuantity < 0) {
+            return response()->json([
+                'message' => 'Insufficient stock',
+                'errors' => [
+                    'adjustment' => ['Cannot reduce stock below zero'],
+                ],
+            ], 422);
+        }
+
+        $product->update([
+            'stock_quantity' => $newQuantity,
+        ]);
+
+        if (isset($validated['note'])) {
+            Log::info('Stock adjustment', [
+                'product_id' => $product->id,
+                'adjustment' => $validated['adjustment'],
+                'previous_quantity' => $product->stock_quantity - $validated['adjustment'],
+                'new_quantity' => $product->stock_quantity,
+                'note' => $validated['note'],
+                'user_id' => $request->user()->id,
+            ]);
+        }
+
+        return response()->json($product->fresh());
+    }
 }

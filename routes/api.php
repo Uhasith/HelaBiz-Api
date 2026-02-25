@@ -36,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/revenue', [DashboardController::class, 'revenue']);
 
     // Products
+    Route::post('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock']);
     Route::apiResource('products', ProductController::class);
 
     // Customers
