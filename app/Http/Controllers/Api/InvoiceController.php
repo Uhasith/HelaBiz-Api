@@ -72,7 +72,7 @@ class InvoiceController extends Controller
                 'invoice_number' => $invoiceNumber,
                 'invoice_date' => $validated['invoice_date'],
                 'due_date' => $validated['due_date'],
-                'status' => $validated['status'],
+                'status' => 'sent', // Default to 'sent' when creating
                 'subtotal' => $validated['subtotal'],
                 'tax' => $validated['tax'] ?? 0,
                 'discount' => $validated['discount'] ?? 0,

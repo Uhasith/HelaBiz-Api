@@ -190,6 +190,9 @@ class OrderInvoiceController extends Controller
 
         $order = $invoice->order;
 
+        $invoice->status = 'sent'; // Update status to 'sent' when regenerating
+        $invoice->save();
+
         // Generate PDF invoice
         $pdfInvoice = $this->generatePdfInvoice($order, $invoice->invoice_number);
 

@@ -3,16 +3,52 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\Quotation;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\Models\Activity;
 
 class DashboardController extends Controller
 {
+    /**
+     * List low stock products (paginated)
+     */
+    public function lowStockProducts(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $tenantId = $user->tenant_id;
+        $perPage = min($request->input('per_page', 10), 50);
+
+        $products = Product::query()
+            ->where('tenant_id', $tenantId)
+            ->whereColumn('stock_quantity', '<=', 'low_stock_alert')
+            ->orderBy('stock_quantity', 'asc')
+            ->paginate($perPage, ['id', 'name', 'sku', 'stock_quantity', 'low_stock_alert']);
+
+        return response()->json($products);
+    }
+
+    /**
+     * List unpaid invoices (paginated)
+     */
+    public function unpaidInvoices(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $tenantId = $user->tenant_id;
+        $perPage = min($request->input('per_page', 10), 50);
+
+        $invoices = Invoice::query()
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'sent')
+            ->orderByDesc('created_at')
+            ->paginate($perPage, ['id', 'invoice_number', 'customer_id', 'total', 'status', 'created_at']);
+
+        return response()->json($invoices);
+    }
+
     /**
      * Get dashboard statistics
      */
@@ -21,45 +57,17 @@ class DashboardController extends Controller
         $user = Auth::user()->load('tenant');
         $tenantId = $user->tenant_id;
 
-        // Get counts
-        $totalProducts = Product::query()->where('tenant_id', $tenantId)->count();
-        $totalCustomers = Customer::query()->where('tenant_id', $tenantId)->count();
-        $totalOrders = Order::query()->where('tenant_id', $tenantId)->count();
-        $totalInvoices = Invoice::query()->where('tenant_id', $tenantId)->count();
-        $totalQuotations = Quotation::query()->where('tenant_id', $tenantId)->count();
-
-        // Get low stock products
-        $lowStockProducts = Product::query()
+        // Get low stock products count
+        $lowStockProductsCount = Product::query()
             ->where('tenant_id', $tenantId)
             ->whereColumn('stock_quantity', '<=', 'low_stock_alert')
-            ->orderBy('stock_quantity', 'asc')
-            ->limit(5)
-            ->get(['id', 'name', 'sku', 'stock_quantity', 'low_stock_alert']);
+            ->count();
 
-        // Get recent orders
-        $recentOrders = Order::query()
+        // Get unpaid invoices count
+        $unpaidInvoicesCount = Invoice::query()
             ->where('tenant_id', $tenantId)
-            ->with(['customer:id,name', 'items.product:id,name'])
-            ->latest()
-            ->limit(5)
-            ->get();
-
-        // Get recent invoices
-        $recentInvoices = Invoice::query()
-            ->where('tenant_id', $tenantId)
-            ->with(['customer:id,name'])
-            ->latest()
-            ->limit(5)
-            ->get();
-
-        // Get pending quotations
-        $pendingQuotations = Quotation::query()
-            ->where('tenant_id', $tenantId)
-            ->where('status', 'pending')
-            ->with(['customer:id,name'])
-            ->latest()
-            ->limit(5)
-            ->get();
+            ->where('status', 'unpaid')
+            ->count();
 
         return response()->json([
             'user' => [
@@ -87,17 +95,8 @@ class DashboardController extends Controller
                     'updated_at' => $user->tenant->updated_at,
                 ],
             ],
-            'counts' => [
-                'products' => $totalProducts,
-                'customers' => $totalCustomers,
-                'orders' => $totalOrders,
-                'invoices' => $totalInvoices,
-                'quotations' => $totalQuotations,
-            ],
-            'low_stock_products' => $lowStockProducts,
-            'recent_orders' => $recentOrders,
-            'recent_invoices' => $recentInvoices,
-            'pending_quotations' => $pendingQuotations,
+            'low_stock_products_count' => $lowStockProductsCount,
+            'unpaid_invoices_count' => $unpaidInvoicesCount,
         ]);
     }
 
@@ -165,5 +164,75 @@ class DashboardController extends Controller
                 'growth_percentage' => round($growthPercentage, 2),
             ],
         ]);
+    }
+
+    /**
+     * Get recent activities (orders and manual stock adjustments) with pagination
+     */
+    public function activities(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $tenantId = $user->tenant_id;
+        $perPage = min($request->input('per_page', 5), 50);
+
+        // Get activities for orders and manual stock adjustments
+        $activities = Activity::query()
+            ->where(function ($query) use ($tenantId) {
+                // Get order activities
+                $query->where(function ($q) use ($tenantId) {
+                    $q->where('subject_type', Order::class)
+                        ->whereHasMorph('subject', [Order::class], function ($subQuery) use ($tenantId) {
+                            $subQuery->where('tenant_id', $tenantId);
+                        });
+                })
+                    // Get manual stock adjustment activities
+                    ->orWhere(function ($q) use ($tenantId) {
+                    $q->where('log_name', 'manual_stock_adjustment')
+                        ->whereHasMorph('subject', [Product::class], function ($subQuery) use ($tenantId) {
+                            $subQuery->where('tenant_id', $tenantId);
+                        });
+                });
+            })
+            ->with(['subject', 'causer'])
+            ->latest()
+            ->paginate($perPage);
+
+        $transformedActivities = $activities->through(function (Activity $activity) {
+            return [
+                'id' => $activity->id,
+                'log_name' => $activity->log_name,
+                'description' => $activity->description,
+                'subject_type' => class_basename($activity->subject_type),
+                'subject_id' => $activity->subject_id,
+                'subject' => $activity->subject ? [
+                    'id' => $activity->subject->id,
+                    'name' => $this->getSubjectName($activity),
+                ] : null,
+                'causer' => $activity->causer ? [
+                    'id' => $activity->causer->id,
+                    'name' => $activity->causer->name,
+                ] : null,
+                'properties' => $activity->properties,
+                'created_at' => $activity->created_at->toIso8601String(),
+            ];
+        });
+
+        // Log::info('Dashboard Activities Response', [
+        //     'activities' => $transformedActivities->toArray(),
+        // ]);
+
+        return response()->json($transformedActivities);
+    }
+
+    /**
+     * Get a readable name for the subject
+     */
+    protected function getSubjectName(Activity $activity): string
+    {
+        return match (true) {
+            $activity->subject instanceof Order => $activity->subject->order_number,
+            $activity->subject instanceof Product => $activity->subject->name,
+            default => '#' . $activity->subject_id,
+        };
     }
 }

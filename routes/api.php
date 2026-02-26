@@ -34,6 +34,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
     Route::get('/dashboard/revenue', [DashboardController::class, 'revenue']);
+    Route::get('/dashboard/activities', [DashboardController::class, 'activities']);
+
+    // Dashboard: low stock products & unpaid invoices
+    Route::get('/dashboard/low-stock-products', [DashboardController::class, 'lowStockProducts']);
+    Route::get('/dashboard/unpaid-invoices', [DashboardController::class, 'unpaidInvoices']);
 
     // Products
     Route::post('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock']);

@@ -153,20 +153,24 @@ class ProductController extends Controller
             ], 422);
         }
 
+        $previousQuantity = $product->stock_quantity;
+
         $product->update([
             'stock_quantity' => $newQuantity,
         ]);
 
-        if (isset($validated['note'])) {
-            Log::info('Stock adjustment', [
-                'product_id' => $product->id,
+        // Log manual stock adjustment as activity
+        activity('manual_stock_adjustment')
+            ->performedOn($product)
+            ->causedBy($request->user())
+            ->withProperties([
                 'adjustment' => $validated['adjustment'],
-                'previous_quantity' => $product->stock_quantity - $validated['adjustment'],
-                'new_quantity' => $product->stock_quantity,
-                'note' => $validated['note'],
-                'user_id' => $request->user()->id,
-            ]);
-        }
+                'previous_quantity' => $previousQuantity,
+                'new_quantity' => $newQuantity,
+                'note' => $validated['note'] ?? null,
+            ])
+            ->event('updated')
+            ->log('Stock manually adjusted');
 
         return response()->json($product->fresh());
     }
