@@ -41,10 +41,11 @@ class DashboardController extends Controller
         $perPage = min($request->input('per_page', 10), 50);
 
         $invoices = Invoice::query()
+            ->with('customer')
             ->where('tenant_id', $tenantId)
             ->where('status', 'sent')
             ->orderByDesc('created_at')
-            ->paginate($perPage, ['id', 'invoice_number', 'customer_id', 'total', 'status', 'created_at']);
+            ->paginate($perPage, ['id', 'invoice_number', 'customer_id', 'total', 'status', 'created_at', 'order_id']);
 
         return response()->json($invoices);
     }
@@ -66,7 +67,7 @@ class DashboardController extends Controller
         // Get unpaid invoices count
         $unpaidInvoicesCount = Invoice::query()
             ->where('tenant_id', $tenantId)
-            ->where('status', 'unpaid')
+            ->where('status', 'sent')
             ->count();
 
         return response()->json([

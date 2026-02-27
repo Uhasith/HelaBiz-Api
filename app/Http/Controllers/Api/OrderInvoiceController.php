@@ -48,7 +48,7 @@ class OrderInvoiceController extends Controller
                 'invoice_number' => $invoiceNumber,
                 'invoice_date' => now(),
                 'due_date' => now()->addDays(config('invoices.date.pay_until_days', 7)),
-                'status' => 'draft',
+                'status' => 'sent',
                 'subtotal' => $order->subtotal,
                 'tax' => $order->tax,
                 'discount' => $order->discount,

@@ -60,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/invoices/{invoice}/regenerate', [OrderInvoiceController::class, 'regenerate']);
 
     // Invoices
+    Route::patch('/invoices/{invoice}/mark-as-paid', [InvoiceController::class, 'markAsPaid']);
     Route::apiResource('invoices', InvoiceController::class);
 
     // Quotations

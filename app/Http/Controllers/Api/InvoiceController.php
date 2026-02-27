@@ -167,4 +167,28 @@ class InvoiceController extends Controller
 
         return response()->json(null, 204);
     }
+
+    /**
+     * Mark the invoice as paid.
+     */
+    public function markAsPaid(Request $request, Invoice $invoice): JsonResponse
+    {
+        if ($invoice->tenant_id !== $request->user()->tenant_id) {
+            abort(403, 'Unauthorized');
+        }
+
+        $invoice->update([
+            'status' => 'paid',
+        ]);
+
+        return response()->json([
+            'message' => 'Invoice marked as paid successfully',
+            'data' => [
+                'id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'status' => $invoice->status,
+                'updated_at' => $invoice->updated_at->toIso8601String(),
+            ],
+        ]);
+    }
 }
