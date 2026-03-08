@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -78,5 +79,50 @@ class AuthController extends Controller
     public function user(Request $request): JsonResponse
     {
         return response()->json($request->user());
+    }
+
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->stateless()->redirect();
+    }
+
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->stateless()->user();
+            
+            $user = User::where('email', $googleUser->getEmail())->first();
+
+            // Auto-register if no account found
+            if (!$user) {
+                // Determine a safe tenant name
+                $businessName = $googleUser->getName() . "'s Business";
+                
+                $tenant = Tenant::create([
+                    'business_name' => $businessName,
+                    'email' => $googleUser->getEmail(),
+                    'currency' => 'LKR',
+                ]);
+                
+                $user = User::create([
+                    'name' => $googleUser->getName(),
+                    'email' => $googleUser->getEmail(),
+                    'password' => Hash::make(str()->random(24)),
+                    'tenant_id' => $tenant->id,
+                ]);
+            }
+
+            // Create standard Sanctum API token
+            $token = $user->createToken('mobile-app')->plainTextToken;
+
+            // Redirect to NativePHP Mobile deep link
+            return redirect()->away('helabiz://authenticate?token=' . $token);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Google Authentication Failed', 
+                'message' => $e->getMessage()
+            ], 400);
+        }
     }
 }
