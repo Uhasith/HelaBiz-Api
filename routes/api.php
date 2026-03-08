@@ -13,12 +13,11 @@ use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
-Route::post('/register', [AuthController::class, 'register']);
+// Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// Google Socialite OAuth routes
-Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle']);
-Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+// WorkOS Auth Verification
+Route::post('/auth/workos/verify', [AuthController::class, 'verifyWorkOS']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -37,8 +36,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::get('/dashboard/revenue', [DashboardController::class, 'revenue']);
+    Route::get('/dashboard/activities', [DashboardController::class, 'activities']);
+
+    // Dashboard: low stock products & unpaid invoices
+    Route::get('/dashboard/low-stock-products', [DashboardController::class, 'lowStockProducts']);
+    Route::get('/dashboard/unpaid-invoices', [DashboardController::class, 'unpaidInvoices']);
 
     // Products
+    Route::post('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock']);
     Route::apiResource('products', ProductController::class);
 
     // Customers
@@ -57,6 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/invoices/{invoice}/regenerate', [OrderInvoiceController::class, 'regenerate']);
 
     // Invoices
+    Route::patch('/invoices/{invoice}/mark-as-paid', [InvoiceController::class, 'markAsPaid']);
     Route::apiResource('invoices', InvoiceController::class);
 
     // Quotations

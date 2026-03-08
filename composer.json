@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "laravel/livewire-starter-kit",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "The official Laravel starter kit for Livewire.",
     "keywords": [
         "laravel",
         "framework"
@@ -10,12 +10,16 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "laravel/fortify": "^1.30",
         "laravel/framework": "^12.0",
-        "laravel/sanctum": "^4.3",
-        "laravel/socialite": "^5.17",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "laraveldaily/laravel-invoices": "^4.1.1",
-        "spatie/laravel-medialibrary": "^11.0"
+        "livewire/flux": "^2.9.0",
+        "livewire/livewire": "^4.0",
+        "spatie/laravel-activitylog": "^4.12",
+        "spatie/laravel-medialibrary": "^11.21",
+        "workos/workos-php": "^4.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -53,8 +57,15 @@
             "Composer\\Config::disableProcessTimeout",
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
+        "lint": [
+            "pint --parallel"
+        ],
+        "test:lint": [
+            "pint --parallel --test"
+        ],
         "test": [
             "@php artisan config:clear --ansi",
+            "@test:lint",
             "@php artisan test"
         ],
         "post-autoload-dump": [

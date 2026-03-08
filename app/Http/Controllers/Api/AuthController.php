@@ -9,7 +9,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -20,12 +19,14 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'tenant_name' => 'required|string|max:255',
+            'currency' => 'nullable|string|size:3',
         ]);
 
         // Create tenant
         $tenant = Tenant::create([
-            'name' => $validated['tenant_name'],
+            'business_name' => $validated['tenant_name'],
             'email' => $validated['email'],
+            'currency' => $validated['currency'] ?? 'LKR',
         ]);
 
         // Create user
@@ -79,32 +80,40 @@ class AuthController extends Controller
         return response()->json($request->user());
     }
 
-    public function redirectToGoogle()
+    public function verifyWorkOS(Request $request): JsonResponse
     {
-        return Socialite::driver('google')->stateless()->redirect();
-    }
+        $request->validate([
+            'code' => 'required|string',
+        ]);
 
-    public function handleGoogleCallback()
-    {
         try {
-            $googleUser = Socialite::driver('google')->stateless()->user();
+            \WorkOS\WorkOS::setApiKey(config('services.workos.api_key', env('WORKOS_API_KEY')));
+            \WorkOS\WorkOS::setClientId(config('services.workos.client_id', env('WORKOS_CLIENT_ID')));
+
+            $profileAndToken = (new \WorkOS\UserManagement())->authenticateWithCode(
+                config('services.workos.client_id', env('WORKOS_CLIENT_ID')),
+                $request->code
+            );
+
+            $workosUser = $profileAndToken->user;
             
-            $user = User::where('email', $googleUser->getEmail())->first();
+            // Check if user exists by email
+            $user = User::where('email', $workosUser->email)->first();
 
             // Auto-register if no account found
             if (!$user) {
                 // Determine a safe tenant name
-                $businessName = $googleUser->getName() . "'s Business";
+                $businessName = ($workosUser->firstName ?? 'User') . "'s Business";
                 
                 $tenant = Tenant::create([
                     'business_name' => $businessName,
-                    'email' => $googleUser->getEmail(),
+                    'email' => $workosUser->email,
                     'currency' => 'LKR',
                 ]);
                 
                 $user = User::create([
-                    'name' => $googleUser->getName(),
-                    'email' => $googleUser->getEmail(),
+                    'name' => trim(($workosUser->firstName ?? '') . ' ' . ($workosUser->lastName ?? '')),
+                    'email' => $workosUser->email,
                     'password' => Hash::make(str()->random(24)),
                     'tenant_id' => $tenant->id,
                 ]);
@@ -113,12 +122,14 @@ class AuthController extends Controller
             // Create standard Sanctum API token
             $token = $user->createToken('mobile-app')->plainTextToken;
 
-            // Redirect to NativePHP Mobile deep link
-            return redirect()->away('helabiz://authenticate?token=' . $token);
+            return response()->json([
+                'user' => $user,
+                'token' => $token,
+            ]);
             
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Google Authentication Failed', 
+                'error' => 'WorkOS Authentication Failed', 
                 'message' => $e->getMessage()
             ], 400);
         }
