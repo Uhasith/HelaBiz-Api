@@ -90,13 +90,13 @@ class AuthController extends Controller
             \WorkOS\WorkOS::setApiKey(config('services.workos.api_key', env('WORKOS_API_KEY')));
             \WorkOS\WorkOS::setClientId(config('services.workos.client_id', env('WORKOS_CLIENT_ID')));
 
-            // Use the SSO SDK to authenticate the authorization code from WorkOS SSO
-            $profileAndToken = (new \WorkOS\SSO())->getProfileAndToken(
-                $request->code,
-                config('services.workos.client_id', env('WORKOS_CLIENT_ID'))
+            // Exchange the authorization code using AuthKit (UserManagement API)
+            $profileAndToken = (new \WorkOS\UserManagement())->authenticateWithCode(
+                config('services.workos.client_id', env('WORKOS_CLIENT_ID')),
+                $request->code
             );
 
-            $workosUser = $profileAndToken->profile;
+            $workosUser = $profileAndToken->user;
             
             // Check if user exists by email
             $user = User::where('email', $workosUser->email)->first();
